@@ -92,7 +92,8 @@ setup(
     # Entry points
     entry_points={
         'topology_openswitch_node_10': [
-            'topology_openswitch = topology_openswitch.topology_openswitch:OpenSwitch'
+            'topology_openswitch = topology_openswitch.topology_openswitch:'
+            'OpenSwitch'
         ]
     }
 )

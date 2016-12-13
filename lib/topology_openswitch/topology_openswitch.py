@@ -22,29 +22,29 @@ topology_openswitch node module
 from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
 
-# Topology already includes a base class for nodes that includes certain
-# capabilities commonly used. This can be changed or removed if necessary.
+from abc import ABCMeta, abstractmethod
+
+from six import add_metaclass
+
 from topology.platforms.base import CommonNode
 
-# Same for the base shell imported here, this class incorporates common shell
-# utilities and can be changed or removed if necessary too.
-from topology.platforms.shell import PExpectBashShell
 
-
+@add_metaclass(ABCMeta)
 class OpenSwitch(CommonNode):
     """
-    topology_openswitch node for the topology_openswitch platform engine.
+    topology_openswitch abstract node.
+
+    This node is not to be instantiated nor it is intended to work with any
+    platform engine as it is. It is only a place where common code for the
+    different implementations of the different OpenSwitch nodes may be.
 
     See :class:`topology.base.CommonNode` for more information.
     """
 
-    # Change this method as needed
+    @abstractmethod
     def __init__(self, identifier, **kwargs):
 
         super(OpenSwitch, self).__init__(identifier, **kwargs)
-
-        # Set your shells as needed
-        self._shells['bash'] = PExpectBashShell()
 
 
 __all__ = ['OpenSwitch']
