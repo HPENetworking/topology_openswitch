@@ -1,0 +1,13 @@
+{
+    "node_name": "topology_openswitch",
+    "platform_engine_name": "topology_openswitch",
+    "class_name": "OpenSwitch",
+    "author": "Hewlett Packard Enterprise Development LP",
+    "email": "hpe-networking@lists.hp.com",
+    "repo_url": "https://github.com/HPENetworking/topology_openswitch",
+    "doc_url": "https://github.com/HPENetworking/topology_openswitch/tree/master/doc",
+    "project_name": "topology_openswitch abstract node",
+    "short_description": "An abstract node for all the common functionality of the OpenSwitch nodes.",
+    "year": "2016",
+    "version": "0.1.0"
+}
