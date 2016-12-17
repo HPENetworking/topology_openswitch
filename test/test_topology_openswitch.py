@@ -24,7 +24,7 @@ from __future__ import print_function, division
 
 from pytest import raises
 
-from topology_openswitch import OpenSwitch, WrongAttributeError
+from topology_openswitch.openswitch import OpenSwitch, WrongAttributeError
 
 
 def test_wrong_attribute():
