@@ -123,7 +123,7 @@ class VtyshShellMixin(object):
             QuitError
         ]
 
-        crash_messages = [getattr(error, 'crash_message') for error in errors]
+        crash_messages = [getattr(error, '_crash_message') for error in errors]
 
         # To find out if a segmentation fault error was produced, a search for
         # the "Segmentation fault" string in the output of the command is done.
