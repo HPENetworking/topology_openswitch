@@ -128,7 +128,7 @@ class VtyshShellMixin(object):
         # To find out if a segmentation fault error was produced, a search for
         # the "Segmentation fault" string in the output of the command is done.
         crash = search(
-            crash_messages, self.get_response(silent=True)
+            '|'.join(crash_messages), self.get_response(silent=True)
         )
 
         # The other necessary condition to detect a segmentation fault error is
