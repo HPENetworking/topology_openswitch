@@ -163,7 +163,9 @@ class VtyshShellMixin(object):
         # always return the produced output, even if an EOF exception
         # follows after it. This is done to handle the segmentation fault
         # errors.
-        self.send_command('stdbuf -oL vtysh', matches=VTYSH_STANDARD_PROMPT)
+        self.send_command(
+            'stdbuf -oL vtysh', matches=VTYSH_STANDARD_PROMPT, silent=True
+        )
 
         # The newer images of OpenSwitch include this command that changes
         # the prompt of the shell to an unique value. This is done to
@@ -172,7 +174,7 @@ class VtyshShellMixin(object):
         index = self.send_command(
             'set prompt {}'.format(_VTYSH_FORCED), matches=[
                 VTYSH_STANDARD_PROMPT, VTYSH_FORCED_PROMPT
-            ]
+            ], silent=True
         )
 
         # Since it is not possible to know beforehand if the image loaded
