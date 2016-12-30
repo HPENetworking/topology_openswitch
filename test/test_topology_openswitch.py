@@ -24,7 +24,9 @@ from __future__ import print_function, division
 
 from pytest import raises
 
-from topology_openswitch.openswitch import OpenSwitch, WrongAttributeError
+from topology_openswitch.openswitch import (
+    OpenSwitch, WrongAttributeError, DeletedAttributeError
+)
 
 
 def test_wrong_attribute():
@@ -33,24 +35,13 @@ def test_wrong_attribute():
     """
 
     class Child0(OpenSwitch):
+        _openswitch_attributes = {
+            'child_0_only_0': 'child_0_only_0 doc',
+            'child_0_only_1': 'child_0_only_1 doc'
+        }
+
         def __init__(self, child_0_only_1):
             self._child_0_only_0 = 9
-            self._child_0_only_1 = child_0_only_1
-
-        @property
-        def child_0_only_0(self):
-            return self._child_0_only_0
-
-        @child_0_only_0.setter
-        def child_0_only_0(self, child_0_only_0):
-            self._child_0_only_0 = child_0_only_0
-
-        @property
-        def child_0_only_1(self):
-            return self._child_0_only_1
-
-        @child_0_only_1.setter
-        def child_0_only_1(self, child_0_only_1):
             self._child_0_only_1 = child_0_only_1
 
         def _get_services_address(self):
@@ -71,6 +62,11 @@ def test_wrong_attribute():
     child_2 = Child2()
 
     assert child_0.child_0_only_0 == 9
+
+    child_0.child_0_only_0
+    child_0.child_0_only_0 = 8
+    assert child_0.child_0_only_0 == 8
+
     assert child_0.child_0_only_1 == 'child_0_only_1'
 
     with raises(WrongAttributeError):
@@ -81,3 +77,11 @@ def test_wrong_attribute():
 
     with raises(AttributeError):
         child_1.child_0_only_2
+
+    assert Child0.child_0_only_0.__doc__ == Child0._openswitch_attributes[
+        'child_0_only_0'
+    ]
+
+    del child_0.child_0_only_0
+    with raises(DeletedAttributeError):
+        child_0.child_0_only_0

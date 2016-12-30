@@ -62,10 +62,64 @@ class WrongAttributeError(Exception):
         return (
             'Attribute {} was not found in class {}, this attribute is'
             ' available in {}.'
-        ).format(self._name, self._class_name, subclasses)
+        ).format(self._attribute, self._class_name, subclasses)
 
 
-@add_metaclass(ABCMeta)
+class DeletedAttributeError(Exception):
+    """
+    Custom exception to be raised when a requested attribute is not present in
+    the instance but is present in the class.
+
+    It is assumed here that these situations happen when the attribute has been
+    deleted with ``del instance.attribute``.
+
+    :param str attribute: Attribute that was not found
+    """
+
+    def __init__(self, attribute):
+        self._attribute = attribute
+
+    def __str__(self):
+        return (
+            'Attribute {} was not present in the instance but is present in'
+            ' the class. Has it been deleted?'
+        )
+
+
+class _MetaOpenSwitch(type):
+
+    def __call__(self, *args, **kwargs):
+
+        for attr, docstring in self._openswitch_attributes.items():
+            setattr(
+                self, attr, property(
+                    (
+                        lambda attr: lambda salf: getattr(
+                            salf, '_{}'.format(attr)
+                        )
+                    )(attr),
+                    (
+                        lambda attr: lambda salf, value: setattr(
+                            salf, '_{}'.format(attr), value
+                        )
+                    )(attr),
+                    (
+                        lambda attr: lambda salf: delattr(
+                            salf, '_{}'.format(attr)
+                        )
+                    )(attr),
+                    docstring
+                )
+            )
+
+        return super(_MetaOpenSwitch, self).__call__(*args, **kwargs)
+
+
+class _ABCMetaMetaOpenSwitch(ABCMeta, _MetaOpenSwitch):
+    _openswitch_attributes = {}
+
+
+@add_metaclass(_ABCMetaMetaOpenSwitch)
 class OpenSwitch(CommonNode):
     """
     topology_openswitch abstract node.
@@ -81,6 +135,8 @@ class OpenSwitch(CommonNode):
 
     See :class:`topology.base.CommonNode` for more information.
     """
+
+    _openswitch_attrs = {}
 
     @abstractmethod
     def __init__(self, identifier, **kwargs):
@@ -123,6 +179,8 @@ class OpenSwitch(CommonNode):
         This method is called when the attribute is not found, and it triggers
         a search for a class that actually has this attribute.
         """
+        if name in self.__class__.__dict__.keys():
+            raise DeletedAttributeError(name)
         self.__class__._find_attribute(name, self.__class__.__name__)
 
         return self.__getattribute__(name)
