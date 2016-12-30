@@ -43,13 +43,14 @@ def test_wrong_attribute():
         def __init__(self, child_0_only_1):
             self._child_0_only_0 = 9
             self._child_0_only_1 = child_0_only_1
+            super(Child0, self).__init__()
 
         def _get_services_address(self):
             pass
 
     class Child1(OpenSwitch):
         def __init__(self):
-            pass
+            super(Child1, self).__init__()
 
         def _get_services_address(self):
             pass

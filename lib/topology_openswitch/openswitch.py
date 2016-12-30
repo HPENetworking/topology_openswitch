@@ -26,8 +26,6 @@ from abc import ABCMeta, abstractmethod
 
 from six import add_metaclass
 
-from topology.platforms.base import CommonNode
-
 
 class WrongAttributeError(Exception):
     """
@@ -90,14 +88,18 @@ class _MetaOpenSwitch(type):
 
     def __call__(self, *args, **kwargs):
 
+        def getattribute(attr):
+            def internal(salf):
+                if attr not in salf._attribute_record:
+                    salf._attribute_record.append(attr)
+
+                return getattr(salf, '_{}'.format(attr))
+            return internal
+
         for attr, docstring in self._openswitch_attributes.items():
             setattr(
                 self, attr, property(
-                    (
-                        lambda attr: lambda salf: getattr(
-                            salf, '_{}'.format(attr)
-                        )
-                    )(attr),
+                    getattribute(attr),
                     (
                         lambda attr: lambda salf, value: setattr(
                             salf, '_{}'.format(attr), value
@@ -120,7 +122,7 @@ class _ABCMetaMetaOpenSwitch(ABCMeta, _MetaOpenSwitch):
 
 
 @add_metaclass(_ABCMetaMetaOpenSwitch)
-class OpenSwitch(CommonNode):
+class OpenSwitch(object):
     """
     topology_openswitch abstract node.
 
@@ -139,9 +141,10 @@ class OpenSwitch(CommonNode):
     _openswitch_attrs = {}
 
     @abstractmethod
-    def __init__(self, identifier, **kwargs):
+    def __init__(self):
+        self._attribute_record = []
 
-        super(OpenSwitch, self).__init__(identifier, **kwargs)
+        super(OpenSwitch, self).__init__()
 
     @classmethod
     def _find_attribute(cls, name, class_name):
@@ -203,6 +206,10 @@ class OpenSwitch(CommonNode):
         subclasses.extend(subsubclasses)
 
         return subclasses
+
+    def __del__(self):
+        pass
+        # FIXME: Implement search for parent attributes here.
 
 
 __all__ = ['OpenSwitch', 'WrongAttributeError']
