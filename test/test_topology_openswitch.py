@@ -22,8 +22,12 @@ Test suite for module topology_openswitch.
 from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
 
-from pytest import raises
+from abc import ABCMeta, abstractmethod
 
+from pytest import raises, warns
+from six import add_metaclass
+
+from topology.platforms.node import CommonNode
 from topology_openswitch.openswitch import (
     OpenSwitch, WrongAttributeError, DeletedAttributeError
 )
@@ -34,33 +38,46 @@ def test_wrong_attribute():
     Test that the wrong attribute is found in the right classes.
     """
 
-    class Child0(OpenSwitch):
+    @add_metaclass(ABCMeta)
+    class Mixer(CommonNode, OpenSwitch):
+        @abstractmethod
+        def __init__(self, *args, **kwargs):
+            super(Mixer, self).__init__(*args, **kwargs)
+
+    class Child0(Mixer):
         _openswitch_attributes = {
             'child_0_only_0': 'child_0_only_0 doc',
             'child_0_only_1': 'child_0_only_1 doc'
         }
 
-        def __init__(self, child_0_only_1):
+        def __init__(self, identifier, child_0_only_1):
             self._child_0_only_0 = 9
             self._child_0_only_1 = child_0_only_1
-            super(Child0, self).__init__()
+            super(Child0, self).__init__(identifier)
 
         def _get_services_address(self):
             pass
 
-    class Child1(OpenSwitch):
-        def __init__(self):
-            super(Child1, self).__init__()
+    class Child1(Mixer):
+        def __init__(self, identifier):
+            super(Child1, self).__init__(identifier)
 
         def _get_services_address(self):
             pass
 
     class Child2(Child1):
-        pass
+        _openswitch_attributes = {
+            'child_2_only_0': 'child_2_only_0 doc',
+        }
 
-    child_0 = Child0('child_0_only_1')
-    child_1 = Child1()
-    child_2 = Child2()
+    class Child3(Child1):
+        _openswitch_attributes = {
+            'child_2_only_0': 'child_2_only_0 doc',
+        }
+
+    child_0 = Child0('child_0', 'child_0_only_1')
+    child_1 = Child1('child_1')
+    child_2 = Child2('child_2')
 
     assert child_0.child_0_only_0 == 9
 
@@ -86,3 +103,6 @@ def test_wrong_attribute():
     del child_0.child_0_only_0
     with raises(DeletedAttributeError):
         child_0.child_0_only_0
+
+    with warns(UserWarning):
+        child_2.__del__()

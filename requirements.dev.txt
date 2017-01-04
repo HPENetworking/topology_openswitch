@@ -6,5 +6,5 @@ sphinx
 sphinx_rtd_theme
 sphinxcontrib-plantuml
 autoapi
-topology
 ipdb
+-e git+https://github.com/HPENetworking/topology.git@init#egg=topology

@@ -23,6 +23,7 @@ from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
 
 from abc import ABCMeta, abstractmethod
+from warnings import warn
 
 from six import add_metaclass
 
@@ -44,6 +45,7 @@ class WrongAttributeError(Exception):
         self._attribute = attribute
         self._class_name = class_name
         self._subclasses = subclasses
+        super(WrongAttributeError, self).__init__()
 
     def __str__(self):
         subclasses = ''
@@ -76,6 +78,7 @@ class DeletedAttributeError(Exception):
 
     def __init__(self, attribute):
         self._attribute = attribute
+        super(DeletedAttributeError, self).__init__()
 
     def __str__(self):
         return (
@@ -91,7 +94,7 @@ class _MetaOpenSwitch(type):
         def getattribute(attr):
             def internal(salf):
                 if attr not in salf._attribute_record:
-                    salf._attribute_record.append(attr)
+                    salf._attribute_record.add(attr)
 
                 return getattr(salf, '_{}'.format(attr))
             return internal
@@ -142,7 +145,7 @@ class OpenSwitch(object):
 
     @abstractmethod
     def __init__(self):
-        self._attribute_record = []
+        self._attribute_record = set()
 
         super(OpenSwitch, self).__init__()
 
@@ -155,7 +158,7 @@ class OpenSwitch(object):
         not present in the object but belongs to other class.
 
         :param str name: The attribute to look for
-        :param str class_name: The name of the class where the attribute was
+        :param str class_name: The na/ame of the class where the attribute was
          not found
         """
         if cls == OpenSwitch:
@@ -173,7 +176,9 @@ class OpenSwitch(object):
                 )
 
         else:
-            cls.__bases__[0]._find_attribute(name, class_name)
+            for base in cls.__bases__:
+                if issubclass(base, OpenSwitch):
+                    base._find_attribute(name, class_name)
 
     def __getattr__(self, name):
         """
@@ -207,9 +212,43 @@ class OpenSwitch(object):
 
         return subclasses
 
+    @classmethod
+    def _find_class(cls, attributes):
+        """
+        Raise a warning if parent class has all attributes used in the test.
+
+        This is done to inform the user that an unnecessarily specific node is
+        being used in the test case.
+
+        :param: set attributes: Node attributes used in the test
+        :rtype: class
+        :return: The highest class that has all the attributes in the test
+        """
+
+        for parent in cls.__bases__:
+            if (
+                not issubclass(parent, OpenSwitch)
+            ) or parent.__abstractmethods__:
+                continue
+            if parent == OpenSwitch:
+                return cls
+            if attributes.issubset(set(parent.__dict__.keys())):
+                return parent._find_class(attributes)
+        else:
+            return cls
+
     def __del__(self):
-        pass
-        # FIXME: Implement search for parent attributes here.
+        higher_class = self.__class__._find_class(self._attribute_record)
+
+        if higher_class != self.__class__:
+            warn(
+                '{} should be instantiated using class {}.{}'.format(
+                    self.identifier,
+                    higher_class.__module__,
+                    higher_class.__name__
+                ),
+                UserWarning
+            )
 
 
 __all__ = ['OpenSwitch', 'WrongAttributeError']
