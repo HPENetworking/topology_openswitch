@@ -125,7 +125,7 @@ class _ABCMetaMetaOpenSwitch(ABCMeta, _MetaOpenSwitch):
 
 
 @add_metaclass(_ABCMetaMetaOpenSwitch)
-class OpenSwitch(object):
+class OpenSwitchBase(object):
     """
     topology_openswitch abstract node.
 
@@ -147,7 +147,7 @@ class OpenSwitch(object):
     def __init__(self):
         self._attribute_record = set()
 
-        super(OpenSwitch, self).__init__()
+        super(OpenSwitchBase, self).__init__()
 
     @classmethod
     def _find_attribute(cls, name, class_name):
@@ -161,7 +161,7 @@ class OpenSwitch(object):
         :param str class_name: The na/ame of the class where the attribute was
          not found
         """
-        if cls == OpenSwitch:
+        if cls == OpenSwitchBase:
             subclasses = cls._get_all_subclasses()
 
             subclasses_with_attribute = []
@@ -177,7 +177,7 @@ class OpenSwitch(object):
 
         else:
             for base in cls.__bases__:
-                if issubclass(base, OpenSwitch):
+                if issubclass(base, OpenSwitchBase):
                     base._find_attribute(name, class_name)
 
     def __getattr__(self, name):
@@ -227,10 +227,10 @@ class OpenSwitch(object):
 
         for parent in cls.__bases__:
             if (
-                not issubclass(parent, OpenSwitch)
+                not issubclass(parent, OpenSwitchBase)
             ) or parent.__abstractmethods__:
                 continue
-            if parent == OpenSwitch:
+            if parent == OpenSwitchBase:
                 return cls
             if attributes.issubset(set(parent.__dict__.keys())):
                 return parent._find_class(attributes)
@@ -251,7 +251,7 @@ class OpenSwitch(object):
             )
 
 
-__all__ = ['OpenSwitch', 'WrongAttributeError']
+__all__ = ['OpenSwitchBase', 'WrongAttributeError']
 __author__ = 'Hewlett Packard Enterprise Development LP'
 __email__ = 'hpe-networking@lists.hp.com'
 __version__ = '0.1.0'

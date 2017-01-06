@@ -29,7 +29,7 @@ from six import add_metaclass
 
 from topology.platforms.node import CommonNode
 from topology_openswitch.openswitch import (
-    OpenSwitch, WrongAttributeError, DeletedAttributeError
+    OpenSwitchBase, WrongAttributeError, DeletedAttributeError
 )
 
 
@@ -39,7 +39,7 @@ def test_wrong_attribute():
     """
 
     @add_metaclass(ABCMeta)
-    class Mixer(CommonNode, OpenSwitch):
+    class Mixer(CommonNode, OpenSwitchBase):
         @abstractmethod
         def __init__(self, *args, **kwargs):
             super(Mixer, self).__init__(*args, **kwargs)
