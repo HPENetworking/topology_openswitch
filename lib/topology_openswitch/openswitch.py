@@ -144,10 +144,10 @@ class OpenSwitchBase(object):
     _openswitch_attrs = {}
 
     @abstractmethod
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._attribute_record = set()
 
-        super(OpenSwitchBase, self).__init__()
+        super(OpenSwitchBase, self).__init__(*args, **kwargs)
 
     @classmethod
     def _find_attribute(cls, name, class_name):
