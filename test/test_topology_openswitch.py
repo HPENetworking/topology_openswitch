@@ -70,18 +70,51 @@ def test_wrong_attribute():
             'child_2_only_0': 'child_2_only_0 doc',
         }
 
+        def __init__(self, identifier):
+            super(Child2, self).__init__(identifier)
+            self._child_2_only_0 = 5
+
     class Child3(Child1):
         _class_openswitch_attributes = {
-            'child_2_only_0': 'child_2_only_0 doc',
+            'child_3_only_0': 'child_3_only_0 doc',
         }
+
+        def __init__(self, identifier):
+            super(Child3, self).__init__(identifier)
+            self._child_3_only_0 = 2
+
+    class Child4(Child2):
+        _class_openswitch_attributes = {
+            'child_4_only_0': 'child_4_only_0 doc',
+        }
+
+        def __init__(self, identifier):
+            super(Child4, self).__init__(identifier)
+            self._child_4_only_0 = 0
 
     child_0_0 = Child0('child_0_0', 'child_0_0_only_1')
     child_0_1 = Child0('child_0_1', 'child_0_1_only_1')
-    child_1 = Child1('child_1')
-    child_2 = Child2('child_2')
+    child_1_0 = Child1('child_1_0')
+    child_2_0 = Child2('child_2_0')
+    child_2_1 = Child2('child_2_1')
+    child_3_0 = Child3('child_3_0')
+    child_4_0 = Child4('child_4_0')
 
     assert child_0_0.child_0_only_0 == 9
     assert child_0_1.child_0_only_0 == 9
+
+    assert child_2_1.identifier == 'child_2_1'
+
+    assert hasattr(child_3_0, 'child_3_only_0')
+
+    assert hasattr(child_4_0, 'child_4_only_0')
+    assert hasattr(child_4_0, 'child_2_only_0')
+
+    assert child_4_0.child_2_only_0 == 5
+
+    child_4_0.child_2_only_0 = 99
+
+    assert child_2_0.child_2_only_0 == 5
 
     child_0_1.child_0_only_1 == 'child_0_only_1'
 
@@ -95,13 +128,13 @@ def test_wrong_attribute():
     assert child_0_0.child_0_only_1 == 'child_0_0_only_1'
 
     with raises(WrongAttributeError):
-        child_1.child_0_only_0
+        child_1_0.child_0_only_0
 
     with raises(WrongAttributeError):
-        child_2.child_0_only_0
+        child_2_0.child_0_only_0
 
     with raises(AttributeError):
-        child_1.child_0_only_2
+        child_1_0.child_0_only_2
 
     assert Child0.child_0_only_0.__doc__ == (
         Child0._class_openswitch_attributes[
@@ -109,9 +142,12 @@ def test_wrong_attribute():
         ]
     )
 
+    # assert hasattr(child_3, 'child_3_only_0')
+    # assert hasattr(child_3, 'child_2_only_0')
+
     del child_0_0.child_0_only_0
     with raises(DeletedAttributeError):
         child_0_0.child_0_only_0
 
     with warns(UserWarning):
-        child_2.__del__()
+        child_2_1.__del__()

@@ -136,6 +136,9 @@ class _MetaOpenSwitch(type):
             current_parent._class_openswitch_attributes
         )
 
+        if self == self.__mro__[0]:
+            del self.next_parents
+
         return parent_attributes
 
 
