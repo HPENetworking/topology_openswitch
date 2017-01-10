@@ -89,35 +89,35 @@ class DeletedAttributeError(Exception):
 
 class _MetaOpenSwitch(type):
 
-    def __call__(self, *args, **kwargs):
+    def __call__(cls, *args, **kwargs):
 
         def getattribute(attr):
-            def internal(salf):
-                if attr not in salf._attribute_record:
-                    salf._attribute_record.add(attr)
+            def internal(self):
+                if attr not in self._attribute_record:
+                    self._attribute_record.add(attr)
 
-                return getattr(salf, '_{}'.format(attr))
+                return getattr(self, '_{}'.format(attr))
             return internal
 
-        for attr, docstring in self._openswitch_attributes.items():
+        for attr, docstring in cls._get_openswitch_attributes().items():
             setattr(
-                self, attr, property(
+                cls, attr, property(
                     getattribute(attr),
                     (
-                        lambda attr: lambda salf, value: setattr(
-                            salf, '_{}'.format(attr), value
+                        lambda attr: lambda self, value: setattr(
+                            self, '_{}'.format(attr), value
                         )
                     )(attr),
                     (
-                        lambda attr: lambda salf: delattr(
-                            salf, '_{}'.format(attr)
+                        lambda attr: lambda self: delattr(
+                            self, '_{}'.format(attr)
                         )
                     )(attr),
                     docstring
                 )
             )
 
-        return super(_MetaOpenSwitch, self).__call__(*args, **kwargs)
+        return super(_MetaOpenSwitch, cls).__call__(*args, **kwargs)
 
 
 class _ABCMetaMetaOpenSwitch(ABCMeta, _MetaOpenSwitch):
@@ -140,9 +140,23 @@ class OpenSwitchBase(object):
 
     See :class:`topology.base.CommonNode` for more information.
     """
-
-    # Child classes should update this dictionary with their own attributes.
     _openswitch_attributes = {}
+
+    @classmethod
+    def _get_openswitch_attributes(cls):
+        if not hasattr(cls, 'next_parents'):
+            cls.next_parents = list(cls.__mro__)
+        current_parent = cls.next_parents.pop(0)
+
+        try:
+            parent_attributes = super(
+                current_parent, cls
+            )._get_openswitch_attributes()
+            parent_attributes.update(current_parent._openswitch_attributes)
+        except AttributeError:
+            parent_attributes = {}
+
+        return parent_attributes
 
     @abstractmethod
     def __init__(self, *args, **kwargs):
