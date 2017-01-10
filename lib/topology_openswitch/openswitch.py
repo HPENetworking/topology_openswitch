@@ -121,7 +121,7 @@ class _MetaOpenSwitch(type):
 
 
 class _ABCMetaMetaOpenSwitch(ABCMeta, _MetaOpenSwitch):
-    _openswitch_attributes = {}
+    pass
 
 
 @add_metaclass(_ABCMetaMetaOpenSwitch)
@@ -141,7 +141,8 @@ class OpenSwitchBase(object):
     See :class:`topology.base.CommonNode` for more information.
     """
 
-    _openswitch_attrs = {}
+    # Child classes should update this dictionary with their own attributes.
+    _openswitch_attributes = {}
 
     @abstractmethod
     def __init__(self, *args, **kwargs):
