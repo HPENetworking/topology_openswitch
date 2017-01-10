@@ -45,7 +45,7 @@ def test_wrong_attribute():
             super(Mixer, self).__init__(*args, **kwargs)
 
     class Child0(Mixer):
-        _openswitch_attributes = {
+        _class_openswitch_attributes = {
             'child_0_only_0': 'child_0_only_0 doc',
             'child_0_only_1': 'child_0_only_1 doc'
         }
@@ -66,26 +66,33 @@ def test_wrong_attribute():
             pass
 
     class Child2(Child1):
-        _openswitch_attributes = {
+        _class_openswitch_attributes = {
             'child_2_only_0': 'child_2_only_0 doc',
         }
 
     class Child3(Child1):
-        _openswitch_attributes = {
+        _class_openswitch_attributes = {
             'child_2_only_0': 'child_2_only_0 doc',
         }
 
-    child_0 = Child0('child_0', 'child_0_only_1')
+    child_0_0 = Child0('child_0_0', 'child_0_0_only_1')
+    child_0_1 = Child0('child_0_1', 'child_0_1_only_1')
     child_1 = Child1('child_1')
     child_2 = Child2('child_2')
 
-    assert child_0.child_0_only_0 == 9
+    assert child_0_0.child_0_only_0 == 9
+    assert child_0_1.child_0_only_0 == 9
 
-    child_0.child_0_only_0
-    child_0.child_0_only_0 = 8
-    assert child_0.child_0_only_0 == 8
+    child_0_1.child_0_only_1 == 'child_0_only_1'
 
-    assert child_0.child_0_only_1 == 'child_0_only_1'
+    child_0_1.child_0_only_0 = 7
+    assert child_0_1.child_0_only_0 == 7
+
+    child_0_0.child_0_only_0
+    child_0_0.child_0_only_0 = 8
+    assert child_0_0.child_0_only_0 == 8
+
+    assert child_0_0.child_0_only_1 == 'child_0_0_only_1'
 
     with raises(WrongAttributeError):
         child_1.child_0_only_0
@@ -96,13 +103,15 @@ def test_wrong_attribute():
     with raises(AttributeError):
         child_1.child_0_only_2
 
-    assert Child0.child_0_only_0.__doc__ == Child0._openswitch_attributes[
-        'child_0_only_0'
-    ]
+    assert Child0.child_0_only_0.__doc__ == (
+        Child0._class_openswitch_attributes[
+            'child_0_only_0'
+        ]
+    )
 
-    del child_0.child_0_only_0
+    del child_0_0.child_0_only_0
     with raises(DeletedAttributeError):
-        child_0.child_0_only_0
+        child_0_0.child_0_only_0
 
     with warns(UserWarning):
         child_2.__del__()
