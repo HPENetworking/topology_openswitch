@@ -46,13 +46,13 @@ def test_wrong_attribute():
 
     class Child0(Mixer):
         _class_openswitch_attributes = {
-            'child_0_only_0': 'child_0_only_0 doc',
-            'child_0_only_1': 'child_0_only_1 doc'
+            'child_0_0': 'child_0_0 doc',
+            'child_0_1': 'child_0_1 doc'
         }
 
-        def __init__(self, identifier, child_0_only_1):
-            self._child_0_only_0 = 9
-            self._child_0_only_1 = child_0_only_1
+        def __init__(self, identifier, child_0_1):
+            self._child_0_0 = 'child_0_0'
+            self._child_0_1 = child_0_1
             super(Child0, self).__init__(identifier)
 
         def _get_services_address(self):
@@ -67,87 +67,109 @@ def test_wrong_attribute():
 
     class Child2(Child1):
         _class_openswitch_attributes = {
-            'child_2_only_0': 'child_2_only_0 doc',
+            'child_2_0': 'child_2_0 doc',
         }
 
         def __init__(self, identifier):
             super(Child2, self).__init__(identifier)
-            self._child_2_only_0 = 5
+            self._child_2_0 = 'child_2_0'
 
     class Child3(Child1):
         _class_openswitch_attributes = {
-            'child_3_only_0': 'child_3_only_0 doc',
+            'child_3_0': 'child_3_0 doc',
         }
 
         def __init__(self, identifier):
             super(Child3, self).__init__(identifier)
-            self._child_3_only_0 = 2
+            self._child_3_0 = 'child_3_0'
 
     class Child4(Child2):
         _class_openswitch_attributes = {
-            'child_4_only_0': 'child_4_only_0 doc',
+            'child_4_0': 'child_4_0 doc',
         }
 
         def __init__(self, identifier):
             super(Child4, self).__init__(identifier)
-            self._child_4_only_0 = 0
+            self._child_4_0 = 'child_4_0'
 
-    child_0_0 = Child0('child_0_0', 'child_0_0_only_1')
-    child_0_1 = Child0('child_0_1', 'child_0_1_only_1')
+    @add_metaclass(ABCMeta)
+    class Child5(Child4):
+        _class_openswitch_attributes = {
+            'child_5_0': 'child_5_0 doc',
+        }
+
+        @abstractmethod
+        def __init__(self, identifier):
+            super(Child5, self).__init__(identifier)
+            self._child_5_0 = 'child_5_0'
+
+    class Child6(Child5):
+        _class_openswitch_attributes = {
+            'child_6_0': 'child_6_0 doc',
+        }
+
+        def __init__(self, identifier):
+            super(Child6, self).__init__(identifier)
+            self._child_6_0 = 'child_6_0'
+
+    child_0_0 = Child0('child_0_0', 'child_0_0_1')
+    child_0_1 = Child0('child_0_1', 'child_0_1_1')
     child_1_0 = Child1('child_1_0')
     child_2_0 = Child2('child_2_0')
     child_2_1 = Child2('child_2_1')
     child_3_0 = Child3('child_3_0')
     child_4_0 = Child4('child_4_0')
+    child_6_0 = Child6('child_6_0')
 
-    assert child_0_0.child_0_only_0 == 9
-    assert child_0_1.child_0_only_0 == 9
+    assert child_6_0.child_5_0 == 'child_5_0'
+
+    assert child_0_0.child_0_0 == 'child_0_0'
+    assert child_0_1.child_0_0 == 'child_0_0'
 
     assert child_2_1.identifier == 'child_2_1'
 
-    assert hasattr(child_3_0, 'child_3_only_0')
+    assert hasattr(child_3_0, 'child_3_0')
 
-    assert hasattr(child_4_0, 'child_4_only_0')
-    assert hasattr(child_4_0, 'child_2_only_0')
+    assert hasattr(child_4_0, 'child_4_0')
+    assert hasattr(child_4_0, 'child_2_0')
 
-    assert child_4_0.child_2_only_0 == 5
+    assert child_4_0.child_2_0 == 'child_2_0'
 
-    child_4_0.child_2_only_0 = 99
+    child_4_0.child_2_0 = 'child_2_0_4'
 
-    assert child_2_0.child_2_only_0 == 5
+    assert child_2_0.child_2_0 == 'child_2_0'
 
-    child_0_1.child_0_only_1 == 'child_0_only_1'
+    assert child_0_1.child_0_1 == 'child_0_1_1'
 
-    child_0_1.child_0_only_0 = 7
-    assert child_0_1.child_0_only_0 == 7
+    child_0_1.child_0_0 = 'child_0_0_1'
 
-    child_0_0.child_0_only_0
-    child_0_0.child_0_only_0 = 8
-    assert child_0_0.child_0_only_0 == 8
+    assert child_0_1.child_0_0 == 'child_0_0_1'
 
-    assert child_0_0.child_0_only_1 == 'child_0_0_only_1'
+    assert child_0_0.child_0_0 == 'child_0_0'
 
-    with raises(WrongAttributeError):
-        child_1_0.child_0_only_0
+    assert child_0_0.child_0_1 == 'child_0_0_1'
 
     with raises(WrongAttributeError):
-        child_2_0.child_0_only_0
+        child_1_0.child_0_0
+
+    with raises(WrongAttributeError):
+        child_2_0.child_0_0
 
     with raises(AttributeError):
-        child_1_0.child_0_only_2
+        child_1_0.child_0_2
 
-    assert Child0.child_0_only_0.__doc__ == (
+    assert Child0.child_0_0.__doc__ == (
         Child0._class_openswitch_attributes[
-            'child_0_only_0'
+            'child_0_0'
         ]
     )
 
-    # assert hasattr(child_3, 'child_3_only_0')
-    # assert hasattr(child_3, 'child_2_only_0')
+    # assert hasattr(child_3, 'child_3_0')
+    # assert hasattr(child_3, 'child_2_0')
 
-    del child_0_0.child_0_only_0
+    del child_0_0.child_0_0
     with raises(DeletedAttributeError):
-        child_0_0.child_0_only_0
+        child_0_0.child_0_0
 
     with warns(UserWarning):
         child_2_1.__del__()
