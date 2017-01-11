@@ -89,7 +89,7 @@ class DeletedAttributeError(Exception):
 
 class _MetaOpenSwitch(type):
 
-    def __call__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
 
         def getattribute(attr):
             def internal(salf):
@@ -116,8 +116,6 @@ class _MetaOpenSwitch(type):
                     docstring
                 )
             )
-
-        return super(_MetaOpenSwitch, self).__call__(*args, **kwargs)
 
 
 class _ABCMetaMetaOpenSwitch(ABCMeta, _MetaOpenSwitch):
