@@ -99,7 +99,7 @@ class _MetaOpenSwitch(type):
                 return getattr(salf, '_{}'.format(attr))
             return internal
 
-        for attr, docstring in self._openswitch_attributes.items():
+        for attr, docstring in self._class_openswitch_attributes.items():
             setattr(
                 self, attr, property(
                     getattribute(attr),
@@ -118,28 +118,6 @@ class _MetaOpenSwitch(type):
             )
 
         return super(_MetaOpenSwitch, self).__call__(*args, **kwargs)
-
-    @property
-    def _openswitch_attributes(self):
-        if not hasattr(self, 'next_parents'):
-            self.next_parents = list(self.__mro__)
-        current_parent = self.next_parents.pop(0)
-
-        try:
-            parent_attributes = super(
-                current_parent, self
-            )._openswitch_attributes
-        except AttributeError:
-            parent_attributes = {}
-
-        parent_attributes.update(
-            current_parent._class_openswitch_attributes
-        )
-
-        if self == self.__mro__[0]:
-            del self.next_parents
-
-        return parent_attributes
 
 
 class _ABCMetaMetaOpenSwitch(ABCMeta, _MetaOpenSwitch):
