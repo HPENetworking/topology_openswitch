@@ -106,7 +106,7 @@ class VtyshShellMixin(object):
     Mixin for the ``vtysh`` shell
     """
 
-    def _handle_crash(self, connection):
+    def _handle_crash(self, connection=None):
         """
         Handle all known vtysh crashes with a proper exception.
 
@@ -143,7 +143,7 @@ class VtyshShellMixin(object):
         if crash and forced_bash_prompt is not None:
             raise errors[crash](self._last_command)
 
-    def _determine_set_prompt(self):
+    def _determine_set_prompt(self, connection=None):
         """
         This method determines if the vtysh command ``set prompt`` exists.
 
@@ -154,6 +154,8 @@ class VtyshShellMixin(object):
         :return: True if vtysh supports the ``set prompt`` command, False
          otherwise.
         """
+        spawn = self._get_connection(connection)
+
         # When a segmentation fault error happens, the message
         # "Segmentation fault" shows up in the terminal and then and EOF
         # follows, making the vtysh shell to close ending up in the bash
@@ -163,19 +165,15 @@ class VtyshShellMixin(object):
         # always return the produced output, even if an EOF exception
         # follows after it. This is done to handle the segmentation fault
         # errors.
-        self.send_command(
-            'stdbuf -oL vtysh', matches=VTYSH_STANDARD_PROMPT, silent=True
-        )
+        spawn.sendline('stdbuf -oL vtysh')
+        spawn.expect(VTYSH_STANDARD_PROMPT)
 
         # The newer images of OpenSwitch include this command that changes
         # the prompt of the shell to an unique value. This is done to
         # perform a safe matching that will match only with this value in
         # each expect.
-        index = self.send_command(
-            'set prompt {}'.format(_VTYSH_FORCED), matches=[
-                VTYSH_STANDARD_PROMPT, VTYSH_FORCED_PROMPT
-            ], silent=True
-        )
+        spawn.sendline('set prompt {}'.format(_VTYSH_FORCED))
+        index = spawn.expect([VTYSH_STANDARD_PROMPT, VTYSH_FORCED_PROMPT])
 
         # Since it is not possible to know beforehand if the image loaded
         # in the node includes the "set prompt" command, an attempt to
