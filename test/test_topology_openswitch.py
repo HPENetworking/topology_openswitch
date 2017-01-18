@@ -16,7 +16,7 @@
 # under the License.
 
 """
-Test suite for module topology_openswitch.
+Test suite for module topology_openswitch.openswitch
 """
 
 from __future__ import unicode_literals, absolute_import
