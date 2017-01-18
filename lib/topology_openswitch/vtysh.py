@@ -123,15 +123,7 @@ class VtyshShellMixin(object):
             QuitError
         ]
 
-        crash_messages = [getattr(error, '_crash_message') for error in errors]
-
-        # To find out if a segmentation fault error was produced, a search for
-        # the "Segmentation fault" string in the output of the command is done.
-        crash = search(
-            '|'.join(crash_messages), self.get_response(silent=True)
-        )
-
-        # The other necessary condition to detect a segmentation fault error is
+        # One necessary condition to detect a segmentation fault error is
         # to detect a forced bash prompt being matched.
         forced_bash_prompt = match(
             BASH_FORCED_PROMPT, spawn.after.decode(
@@ -139,9 +131,19 @@ class VtyshShellMixin(object):
             )
         )
 
-        # This exception is raised to provide a meaningful error to the user.
-        if crash and forced_bash_prompt is not None:
-            raise errors[crash](self._last_command)
+        # The other condition is to find the matching error in the crash
+        # message.
+        for error in errors:
+            crash = search(
+                getattr(
+                    error, '_crash_message'
+                ), self.get_response(silent=True)
+            )
+
+            # This exception is raised to provide a meaningful error to the
+            # user.
+            if crash and forced_bash_prompt is not None:
+                raise error(self._last_command)
 
     def _determine_set_prompt(self, connection=None):
         """
