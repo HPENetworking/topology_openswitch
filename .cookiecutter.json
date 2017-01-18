@@ -9,5 +9,5 @@
     "project_name": "topology_openswitch abstract node",
     "short_description": "An abstract node for all the common functionality of the OpenSwitch nodes.",
     "year": "2016",
-    "version": "0.1.0"
+    "version": "1.0.0"
 }

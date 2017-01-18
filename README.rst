@@ -10,6 +10,12 @@ Documentation
 
     https://github.com/HPENetworking/topology_openswitch/tree/master/doc
 
+1.0.0
+-----
+
+**New**
+
+- Releasing first version.
 
 License
 =======
