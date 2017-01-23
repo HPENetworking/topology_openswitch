@@ -10,6 +10,15 @@ Documentation
 
     https://github.com/HPENetworking/topology_openswitch/tree/master/doc
 
+1.0.1
+-----
+
+**Fix**
+
+- Adding missing argument in error output.
+- Refactoring printing of errors.
+- Safely checking for abstract methods.
+
 1.0.0
 -----
 
