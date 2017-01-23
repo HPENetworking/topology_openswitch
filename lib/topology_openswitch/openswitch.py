@@ -92,7 +92,7 @@ class DeletedAttributeError(Exception):
     def __str__(self):
         return (
             'Attribute {} was not present in the instance but is present in'
-            ' the class. Has it been deleted?'
+            ' the class. Has it been deleted?'.format(self._attribute)
         )
 
 
