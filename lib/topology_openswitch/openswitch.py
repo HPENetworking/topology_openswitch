@@ -37,32 +37,41 @@ class WrongAttributeError(Exception):
     that is child of OpenSwitch.
 
     :param str attribute: Attribute that was not found
-    :param str class_name: Class that was missing the attribute
-    :param list subclasses: List of class names that have the attribute
+    :param class lacking_class: Class that was missing the attribute
+    :param list having_classes: List of concrete classes names that have the
+     attribute
     """
 
-    def __init__(self, attribute, class_name, subclasses):
+    def __init__(self, attribute, lacking_class, having_classes):
         self._attribute = attribute
-        self._class_name = class_name
-        self._subclasses = subclasses
+        self._lacking_class = lacking_class
+        self._having_classes = having_classes
         super(WrongAttributeError, self).__init__()
 
     def __str__(self):
-        subclasses = ''
 
-        for subclass in self._subclasses[:-1]:
-            subclasses = '{}{}'.format(
-                subclasses, '{}, '.format(subclass)
+        def module_name(class_):
+            return '{}.{}'.format(class_.__module__, class_.__name__)
+
+        having_classes = ''
+
+        for having_class in self._having_classes[:-1]:
+            having_classes = '{}{}'.format(
+                having_classes, module_name(having_class)
             )
 
-        subclasses = '{}{}'.format(
-            subclasses, self._subclasses[-1]
+        last_having_class = self._having_classes[-1]
+        having_classes = '{}{}'.format(
+            having_classes,
+            module_name(last_having_class)
         )
 
         return (
             'Attribute {} was not found in class {}, this attribute is'
             ' available in {}.'
-        ).format(self._attribute, self._class_name, subclasses)
+        ).format(
+            self._attribute, module_name(self._lacking_class), having_classes
+        )
 
 
 class DeletedAttributeError(Exception):
@@ -147,16 +156,15 @@ class OpenSwitchBase(object):
         super(OpenSwitchBase, self).__init__(*args, **kwargs)
 
     @classmethod
-    def _find_attribute(cls, name, class_name):
+    def _find_attribute(cls, name, lacking_class):
         """
         Recursively find an attribute in the subclasses of OpenSwitch.
 
         This method raises an WrongAttribtueError exception if the attribute is
         not present in the object but belongs to other class.
 
-        :param str name: The attribute to look for
-        :param str class_name: The na/ame of the class where the attribute was
-         not found
+        :param str name: The name of the attribute to look for
+        :param class lacking_class: The class where the attribute was not found
         """
         if cls == OpenSwitchBase:
             subclasses = [
@@ -169,17 +177,17 @@ class OpenSwitchBase(object):
 
             for subclass in subclasses:
                 if name in subclass.__dict__.keys():
-                    subclasses_with_attribute.append(subclass.__name__)
+                    subclasses_with_attribute.append(subclass)
 
             if subclasses_with_attribute:
                 raise WrongAttributeError(
-                    name, class_name, subclasses_with_attribute
+                    name, lacking_class, subclasses_with_attribute
                 )
 
         else:
             for base in cls.__bases__:
                 if issubclass(base, OpenSwitchBase):
-                    base._find_attribute(name, class_name)
+                    base._find_attribute(name, lacking_class)
 
     def __getattr__(self, name):
         """
@@ -190,7 +198,7 @@ class OpenSwitchBase(object):
         """
         if name in self.__class__.__dict__.keys():
             raise DeletedAttributeError(name)
-        self.__class__._find_attribute(name, self.__class__.__name__)
+        self.__class__._find_attribute(name, self.__class__)
 
         return self.__getattribute__(name)
 

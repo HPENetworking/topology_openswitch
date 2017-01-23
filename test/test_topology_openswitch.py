@@ -149,8 +149,14 @@ def test_wrong_attribute():
 
     assert child_0_0.child_0_1 == 'child_0_0_1'
 
-    with raises(WrongAttributeError):
+    with raises(WrongAttributeError) as error:
         child_1_0.child_0_0
+
+    assert (
+        'Attribute child_0_0 was not found in class '
+        'test_topology_openswitch.Child1, this attribute is available in'
+        ' test_topology_openswitch.Child0.'
+    ) == str(error.value)
 
     with raises(WrongAttributeError):
         child_2_0.child_0_0
@@ -164,10 +170,10 @@ def test_wrong_attribute():
         ]
     )
 
-    # assert hasattr(child_3, 'child_3_0')
-    # assert hasattr(child_3, 'child_2_0')
+    assert hasattr(child_3_0, 'child_3_0')
 
     del child_0_0.child_0_0
+
     with raises(DeletedAttributeError):
         child_0_0.child_0_0
 
