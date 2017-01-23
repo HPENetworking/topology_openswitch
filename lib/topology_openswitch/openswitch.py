@@ -159,7 +159,11 @@ class OpenSwitchBase(object):
          not found
         """
         if cls == OpenSwitchBase:
-            subclasses = cls._get_all_subclasses()
+            subclasses = [
+                subclass for subclass in cls._get_all_subclasses() if not (
+                    subclass.__dict__.get('__abstractmethods__', False)
+                )
+            ]
 
             subclasses_with_attribute = []
 
@@ -225,7 +229,7 @@ class OpenSwitchBase(object):
         for parent in cls.__bases__:
             if (
                 not issubclass(parent, OpenSwitchBase)
-            ) or parent.__abstractmethods__:
+            ) or parent.__dict__.get('__abstractmethods__', False):
                 continue
             if parent == OpenSwitchBase:
                 return cls
