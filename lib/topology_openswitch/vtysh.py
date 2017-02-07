@@ -43,6 +43,8 @@ _VTYSH_STANDARD = 'switch'
 # A bash prompt may be found in an unset value too, this regular expression
 # matches that kind of prompts:
 BASH_STANDARD_PROMPT = r'(\r\n)?root@[-\w]+:~# '
+# The prompt can change on rbac enabled images
+BASH_NONROOT_PROMPT = r'(\r\n)?switch:~\$ '
 # Prompt value that is set in the bash prompt
 BASH_FORCED_PROMPT = PExpectBashShell.FORCED_PROMPT
 
