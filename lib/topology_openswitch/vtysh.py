@@ -38,7 +38,7 @@ _VTYSH_FORCED = 'X@~~==::VTYSH_PROMPT::==~~@X'
 
 # Regular expression that matches with values that may be found in unset vtysh
 # prompts
-_VTYSH_STANDARD = 'switch'
+_VTYSH_STANDARD = '[-\w]+'
 
 # A bash prompt may be found in an unset value too, this regular expression
 # matches that kind of prompts:
