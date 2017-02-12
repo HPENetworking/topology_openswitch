@@ -10,6 +10,13 @@ Documentation
 
     https://github.com/HPENetworking/topology_openswitch/tree/master/doc
 
+1.1.0
+-----
+
+**New**
+
+- Add support for rbac.
+
 1.0.1
 -----
 
