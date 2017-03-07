@@ -24,6 +24,7 @@ from __future__ import print_function, division
 
 from logging import warning
 from re import search, match
+from time import sleep
 
 from pexpect import EOF
 
@@ -176,15 +177,23 @@ class VtyshShellMixin(object):
         # the prompt of the shell to an unique value. This is done to
         # perform a safe matching that will match only with this value in
         # each expect.
-        spawn.sendline('set prompt {}'.format(_VTYSH_FORCED))
-        index = spawn.expect([VTYSH_STANDARD_PROMPT, VTYSH_FORCED_PROMPT])
+        for attempt in range(0, 10):
+            spawn.sendline('set prompt {}'.format(_VTYSH_FORCED))
+            index = spawn.expect([VTYSH_STANDARD_PROMPT, VTYSH_FORCED_PROMPT])
 
-        # Since it is not possible to know beforehand if the image loaded
-        # in the node includes the "set prompt" command, an attempt to
-        # match any of the following prompts is done. If the command does
-        # not exist, the shell will return an standard prompt after showing
-        # an error message.
-        return bool(index)
+            # If the image does not set the prompt immediately, wait and retry
+            if index == 0:
+                sleep(1)
+
+            else:
+                # Since it is not possible to know beforehand if the image
+                # loaded in the node includes the "set prompt" command, an
+                # attempt to match any of the following prompts is done. If the
+                # command does not exist, the shell will return an standard
+                # prompt after showing an error message.
+                return bool(index)
+
+        return False
 
     def _exit(self):
         """
