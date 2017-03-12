@@ -10,6 +10,13 @@ Documentation
 
     https://github.com/HPENetworking/topology_openswitch/tree/master/doc
 
+1.1.1
+-----
+
+**New**
+
+- Add retry in setting prompt.
+
 1.1.0
 -----
 
