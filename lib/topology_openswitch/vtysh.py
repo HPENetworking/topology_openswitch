@@ -26,7 +26,7 @@ from logging import warning
 from re import search, match
 from time import sleep
 
-from pexpect import EOF
+from pexpect import EOF, TIMEOUT
 
 from topology.platforms.shell import PExpectBashShell
 
@@ -170,8 +170,21 @@ class VtyshShellMixin(object):
         # always return the produced output, even if an EOF exception
         # follows after it. This is done to handle the segmentation fault
         # errors.
-        spawn.sendline('stdbuf -oL vtysh')
-        spawn.expect(VTYSH_STANDARD_PROMPT)
+        for i in range(10):
+                try:
+                    spawn.sendline('stdbuf -oL vtysh')
+                    spawn.expect(VTYSH_STANDARD_PROMPT, timeout=3)
+                    break
+                except TIMEOUT:
+                    continue
+        else:
+            # Decode what is found to uft-8 and prints the contents to
+            # the error.
+            before_msg = spawn.before.decode('utf-8', errors='ignore')
+            raise Exception(
+              'Unable to connect to vytsh, last output received: {}'.format(
+                  before_msg
+            )
 
         # The newer images of OpenSwitch include this command that changes
         # the prompt of the shell to an unique value. This is done to
