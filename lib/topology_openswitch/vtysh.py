@@ -171,19 +171,20 @@ class VtyshShellMixin(object):
         # follows after it. This is done to handle the segmentation fault
         # errors.
         for i in range(10):
-                try:
-                    spawn.sendline('stdbuf -oL vtysh')
-                    spawn.expect(VTYSH_STANDARD_PROMPT, timeout=3)
-                    break
-                except TIMEOUT:
-                    continue
+            try:
+                spawn.sendline('stdbuf -oL vtysh')
+                spawn.expect(VTYSH_STANDARD_PROMPT, timeout=3)
+                break
+            except TIMEOUT:
+                continue
         else:
             # Decode what is found to uft-8 and prints the contents to
             # the error.
             before_msg = spawn.before.decode('utf-8', errors='ignore')
             raise Exception(
-              'Unable to connect to vytsh, last output received: {}'.format(
-                  before_msg
+                'Unable to connect to vytsh, last output received: {}'.format(
+                    before_msg
+                )
             )
 
         # The newer images of OpenSwitch include this command that changes
