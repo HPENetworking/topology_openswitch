@@ -56,54 +56,45 @@ VTYSH_FORCED_PROMPT = _VTYSH_PROMPT_TPL.format(_VTYSH_FORCED)
 VTYSH_STANDARD_PROMPT = _VTYSH_PROMPT_TPL.format(_VTYSH_STANDARD)
 
 
-class _VtyshError(Exception):
+class VtyshError(Exception):
     """
-    Pass.
+    Generic class for all vtysh crash errors
     """
+
     _crash_message = None
 
-    def __init__(self, command):
+    def __init__(self, response, command):
+        self._response = response
         self._command = command
 
     def __str__(self):
         return '{} received when executing "{}"'.format(
-            self._crash_message,
+            self._response,
             self._command
         )
 
 
-class SegmentationFaultError(_VtyshError):
-    """
-    Pass
-    """
+class UnknownError(VtyshError):
+    _crash_message = None
+
+
+class SegmentationFaultError(VtyshError):
     _crash_message = 'Segmentation fault'
 
 
-class IllegalInstructionErrorError(_VtyshError):
-    """
-    Pass
-    """
+class IllegalInstructionErrorError(VtyshError):
     _crash_message = 'Illegal instruction error'
 
 
-class AbortedError(_VtyshError):
-    """
-    Pass
-    """
+class AbortedError(VtyshError):
     _crash_message = 'Aborted'
 
 
-class FloatingPointExceptionErrorError(_VtyshError):
-    """
-    Pass
-    """
+class FloatingPointExceptionErrorError(VtyshError):
     _crash_message = 'Floating point exception error'
 
 
-class QuitError(_VtyshError):
-    """
-    Pass
-    """
+class QuitError(VtyshError):
     _crash_message = 'Quit'
 
 
@@ -137,19 +128,22 @@ class VtyshShellMixin(object):
             )
         )
 
+        if forced_bash_prompt is None:
+            return
+
+        response = self.get_response(silent=True)
+
         # The other condition is to find the matching error in the crash
         # message.
         for error in errors:
-            crash = search(
-                getattr(
-                    error, '_crash_message'
-                ), self.get_response(silent=True)
-            )
+            crash = search(getattr(error, '_crash_message'), response)
 
             # This exception is raised to provide a meaningful error to the
             # user.
-            if crash and forced_bash_prompt is not None:
-                raise error(self._last_command)
+            if crash:
+                raise error(response, self._last_command)
+        else:
+            raise UnknownError(response, self._last_command)
 
     def _determine_set_prompt(self, connection=None):
         """
