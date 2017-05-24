@@ -178,6 +178,8 @@ class VtyshShellMixin(object):
 
         for i in range(attempts):
             try:
+                spawn.sendline('pgrep vtysh')
+                spawn.expect(BASH_FORCED_PROMPT)
                 spawn.sendline('stdbuf -oL vtysh')
                 index = spawn.expect(
                     [VTYSH_STANDARD_PROMPT, BASH_FORCED_PROMPT], timeout=30
@@ -190,6 +192,8 @@ class VtyshShellMixin(object):
                             spawn.before.decode('utf-8', errors='ignore')
                         )
                     )
+                    spawn.sendline('pgrep vtysh')
+                    spawn.expect(BASH_FORCED_PROMPT)
                     continue
                 else:
                     raise Exception(
