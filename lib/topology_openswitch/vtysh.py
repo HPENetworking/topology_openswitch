@@ -25,10 +25,13 @@ from __future__ import print_function, division
 from logging import warning
 from re import search, match
 from time import sleep
+from logging import getLogger
 
-from pexpect import EOF, TIMEOUT
+from pexpect import EOF
 
 from topology.platforms.shell import PExpectBashShell
+
+log = getLogger(__name__)
 
 # Regular expression template that matches a vtysh prompt along with its
 # context
@@ -170,22 +173,36 @@ class VtyshShellMixin(object):
         # always return the produced output, even if an EOF exception
         # follows after it. This is done to handle the segmentation fault
         # errors.
-        for i in range(10):
+
+        attempts = 10
+
+        for i in range(attempts):
             try:
                 spawn.sendline('stdbuf -oL vtysh')
-                spawn.expect(VTYSH_STANDARD_PROMPT, timeout=3)
-                break
-            except TIMEOUT:
-                continue
-        else:
-            # Decode what is found to uft-8 and prints the contents to
-            # the error.
-            before_msg = spawn.before.decode('utf-8', errors='ignore')
-            raise Exception(
-                'Unable to connect to vytsh, last output received: {}'.format(
-                    before_msg
+                index = spawn.expect(
+                    [VTYSH_STANDARD_PROMPT, BASH_FORCED_PROMPT], timeout=30
                 )
-            )
+                if index == 0:
+                    break
+                elif index == 1:
+                    log.warning(
+                        'Unable to start vtysh, received output: {}'.format(
+                            spawn.before.decode('utf-8', errors='ignore')
+                        )
+                    )
+                    continue
+                else:
+                    raise Exception(
+                        'Unexpected match received: {}'.format(index)
+                    )
+            except Exception as error:
+                raise Exception(
+                    'Unable to connect to vytsh after {} attempts, '
+                    'last output received: {}'.format(
+                        attempts,
+                        spawn.before.decode('utf-8', errors='ignore')
+                    )
+                ) from error
 
         # The newer images of OpenSwitch include this command that changes
         # the prompt of the shell to an unique value. This is done to
