@@ -10,6 +10,13 @@ Documentation
 
     https://github.com/HPENetworking/topology_openswitch/tree/master/doc
 
+1.1.3
+-----
+
+**Fix**
+
+- Avoiding multiple vtysh starts.
+
 1.1.2
 -----
 
