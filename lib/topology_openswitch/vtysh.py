@@ -23,7 +23,7 @@ from __future__ import unicode_literals, absolute_import
 from __future__ import print_function, division
 
 from logging import warning
-from re import search, match
+from re import match
 from time import sleep
 from logging import getLogger
 
@@ -61,41 +61,50 @@ class VtyshError(Exception):
     Generic class for all vtysh crash errors
     """
 
-    _crash_message = None
+    _error_message = None
 
-    def __init__(self, response, command):
-        self._response = response
+    def __init__(self, command):
         self._command = command
 
     def __str__(self):
         return '{} received when executing "{}"'.format(
-            self._response,
+            self._error_message,
             self._command
         )
 
 
 class UnknownError(VtyshError):
-    _crash_message = None
+    """
+    Represents an unknown error
+
+    This exception is to be raised when there is a vtysh crash that returns
+    an unknown error message
+    """
+
+    def __init__(self, command, error_message):
+        super(UnknownError, self).__init__(command)
+
+        self._error_message = error_message
 
 
-class SegmentationFaultError(VtyshError):
-    _crash_message = 'Segmentation fault'
+# This allows the user to only have to worry of adding the error messages here,
+# the classes and the insertion of their symbols in this module will be done in
+# a completely automatic way.
+_ERROR_MESSAGES = [
+    'Segmentation fault',
+    'Illegal instruction error',
+    'Aborted',
+    'Floating point exception error',
+    'Quit'
+]
 
-
-class IllegalInstructionErrorError(VtyshError):
-    _crash_message = 'Illegal instruction error'
-
-
-class AbortedError(VtyshError):
-    _crash_message = 'Aborted'
-
-
-class FloatingPointExceptionErrorError(VtyshError):
-    _crash_message = 'Floating point exception error'
-
-
-class QuitError(VtyshError):
-    _crash_message = 'Quit'
+_ERROR_CLASSES = {
+    error_message: type(
+        ''.join([error_message.title().replace(' ', ''), 'Error']),
+        (VtyshError, ),
+        {'_error_message': error_message}
+    ) for error_message in _ERROR_MESSAGES
+}
 
 
 class VtyshShellMixin(object):
@@ -107,43 +116,45 @@ class VtyshShellMixin(object):
         """
         Handle all known vtysh crashes with a proper exception.
 
+        This method will raise a proper exception if a vtysh crash is detected.
+        If no crash is detected, it will do nothing. Because of this, the call
+        of send_command of the nodes that use this method should be done inside
+        a try/except block and this method called in the latter part. A call to
+        raise should follow the call of this method to raise the original
+        exception if a vtysh crash cannot be detected.
+
         :param str connection: The connection in which to handle a crash
         """
 
         spawn = self._get_connection(connection)
 
-        errors = [
-            SegmentationFaultError,
-            IllegalInstructionErrorError,
-            AbortedError,
-            FloatingPointExceptionErrorError,
-            QuitError
-        ]
-
         # One necessary condition to detect a segmentation fault error is
         # to detect a forced bash prompt being matched.
-        forced_bash_prompt = match(
-            BASH_FORCED_PROMPT, spawn.after.decode(
-                encoding=self._encoding, errors=self._errors
-            )
+        before = spawn.before.decode(
+            encoding=self._encoding, errors=self._errors
         )
 
-        if forced_bash_prompt is None:
-            return
+        error_bash_prompt_re = r'.*\n(?P<error>{})\n{}'
 
-        response = self.get_response(silent=True)
+        error_bash_prompt_match = match(
+            error_bash_prompt_re.format(
+                '|'.join(_ERROR_MESSAGES), BASH_FORCED_PROMPT
+            ), before
+        )
 
-        # The other condition is to find the matching error in the crash
-        # message.
-        for error in errors:
-            crash = search(getattr(error, '_crash_message'), response)
+        if error_bash_prompt_match is not None:
+            raise _ERROR_CLASSES[error_bash_prompt_match.group('error')](
+                self._last_command
+            )
 
-            # This exception is raised to provide a meaningful error to the
-            # user.
-            if crash:
-                raise error(response, self._last_command)
-        else:
-            raise UnknownError(response, self._last_command)
+        bash_prompt_match = match(
+            error_bash_prompt_re.format(r'.*', BASH_FORCED_PROMPT)
+        )
+
+        if bash_prompt_match is not None:
+            raise UnknownError(
+                self._last_command, bash_prompt_match.group('error')
+            )
 
     def _determine_set_prompt(self, connection=None):
         """
@@ -256,9 +267,13 @@ __all__ = [
     'BASH_FORCED_PROMPT',
     'BASH_STANDARD_PROMPT',
     'VtyshShellMixin',
-    'SegmentationFaultError',
-    'IllegalInstructionErrorError',
-    'AbortedError',
-    'FloatingPointExceptionErrorError',
-    'QuitError',
+    'VtyshError',
+    'UnknownError'
 ]
+
+
+# Here the names of the vtysh error classes are inserted in the globals
+# dictionary to make them importable from this module directly.
+for error_class in _ERROR_CLASSES.values():
+    globals()[error_class.__name__] = error_class
+    __all__.append(error_class.__name__)
