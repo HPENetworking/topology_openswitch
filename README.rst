@@ -10,50 +10,6 @@ Documentation
 
     https://github.com/HPENetworking/topology_openswitch/tree/master/doc
 
-1.1.3
------
-
-**Fix**
-
-- Avoiding multiple vtysh starts.
-
-1.1.2
------
-
-**Change**
-
-- Adding retry for vtysh connection.
-
-1.1.1
------
-
-**New**
-
-- Add retry in setting prompt.
-
-1.1.0
------
-
-**New**
-
-- Add support for rbac.
-
-1.0.1
------
-
-**Fix**
-
-- Adding missing argument in error output.
-- Refactoring printing of errors.
-- Safely checking for abstract methods.
-
-1.0.0
------
-
-**New**
-
-- Releasing first version.
-
 License
 =======
 
@@ -73,3 +29,46 @@ License
    KIND, either express or implied.  See the License for the
    specific language governing permissions and limitations
    under the License.
+
+Changelog
+=========
+
+
+1.1.2 (2017-05-09)
+------------------
+- Merge pull request #5 from HPENetworking/vytsh-retry. [Diego Hurtado]
+
+  Vytsh retry
+
+
+1.1.1 (2017-03-12)
+------------------
+- Merge pull request #4 from HPENetworking/retry_set_prompt. [Diego
+  Hurtado]
+
+  fix: dev: Adding retry.
+
+
+1.1.0 (2017-02-12)
+------------------
+- Merge pull request #3 from HPENetworking/general_standard. [Pablo
+  Saenz]
+
+  chg: dev: Updating regex to match other prompts.
+- Merge pull request #2 from HPENetworking/generic_prompt. [Diego
+  Hurtado]
+
+  fix: dev: Setting prompt when hostname is not switch.
+- Merge pull request #1 from saenzpa/add_nonroot. [Diego Hurtado]
+
+  fix: dev: Add prompt for rbac enabled images.
+
+
+1.0.0 (2017-01-18)
+------------------
+
+New
+~~~
+- Adding test case. [Diego Antonio Hurtado Pimentel]
+
+
