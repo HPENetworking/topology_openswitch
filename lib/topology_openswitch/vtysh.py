@@ -208,13 +208,13 @@ class VtyshShellMixin(object):
         # the prompt of the shell to an unique value. This is done to
         # perform a safe matching that will match only with this value in
         # each expect.
-        for attempt in range(0, 10):
+        for attempt in range(0, 60):
             spawn.sendline('set prompt {}'.format(_VTYSH_FORCED))
             index = spawn.expect([VTYSH_STANDARD_PROMPT, VTYSH_FORCED_PROMPT])
 
             # If the image does not set the prompt immediately, wait and retry
             if index == 0:
-                sleep(1)
+                sleep(10)
 
             else:
                 # Since it is not possible to know beforehand if the image
