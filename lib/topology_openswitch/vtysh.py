@@ -256,12 +256,95 @@ class VtyshShellMixin(object):
                 )
 
 
+class ValgrindShellMixin(VtyshShellMixin):
+    """
+    Mixin for the ``valgrind`` shell
+    """
+    def _determine_set_prompt(self, connection=None):
+        """
+        This method determines if the valgrind command ``set prompt`` exists.
+
+        This method starts wit a call to sendline and finishes with a call
+        to expect.
+
+        :rtype: bool
+        :return: True if valgrind supports the ``set prompt`` command, False
+         otherwise.
+        """
+        spawn = self._get_connection(connection)
+        # When a segmentation fault error happens, the message
+        # "Segmentation fault" shows up in the terminal and then and EOF
+        # follows, making the valgrind shell to close ending up in the bash
+        # shell that opened it.
+
+        # This starts the valgrind shell in a mode that forces the shell to
+        # always return the produced output, even if an EOF exception
+        # follows after it. This is done to handle the segmentation fault
+        # errors.
+
+        attempts = 10
+
+        for i in range(attempts):
+            try:
+                spawn.sendline('sudo setcap -r /usr/bin/vtysh')
+                spawn.sendline('valgrind --tool=memcheck --leak-check=full'\
+                               '--log-file=./valgrind_data.%p /usr/bin/vtysh')
+                index = spawn.expect(
+                    [VTYSH_STANDARD_PROMPT, BASH_FORCED_PROMPT], timeout=30
+                )
+                if index == 0:
+                    break
+                elif index == 1:
+                    log.warning(
+                        'Unable to start valgrind, received output: {}'.format(
+                            spawn.before.decode('utf-8', errors='ignore')
+                        )
+                    )
+                    continue
+                else:
+                    raise Exception(
+                        'Unexpected match received: {}'.format(index)
+                    )
+            except Exception as error:
+                raise Exception(
+                    'Unable to connect to vytsh after {} attempts, '
+                    'last output received: {}'.format(
+                        attempts,
+                        spawn.before.decode('utf-8', errors='ignore')
+                   )
+                ) from error
+
+        # The newer images of OpenSwitch include this command that changes
+        # the prompt of the shell to an unique value. This is done to
+        # perform a safe matching that will match only with this value in
+        # each expect.
+
+        for attempt in range(0, 60):
+            spawn.sendline('set prompt {}'.format(_VTYSH_FORCED))
+            index = spawn.expect([VTYSH_STANDARD_PROMPT, VTYSH_FORCED_PROMPT])
+
+            # If the image does not set the prompt immediately, wait and retry
+            if index == 0:
+                sleep(10)
+
+            else:
+                # Since it is not possible to know beforehand if the image
+                # loaded in the node includes the "set prompt" command, an
+                # attempt to match any of the following prompts is done. If the
+                # command does not exist, the shell will return an standard
+                # prompt after showing an error message.
+                return bool(index)
+
+        return False
+
+
 __all__ = [
     'VTYSH_FORCED_PROMPT',
     'VTYSH_STANDARD_PROMPT',
     'BASH_FORCED_PROMPT',
     'BASH_STANDARD_PROMPT',
     'VtyshShellMixin',
+    'ValgrindShellMixin',
     'SegmentationFaultError',
     'IllegalInstructionErrorError',
     'AbortedError',
